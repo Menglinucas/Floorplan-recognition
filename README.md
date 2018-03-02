@@ -9,6 +9,7 @@ Floorplan-recognition
 > #### (4) 1x1x800 ---> conv
 > #### (5) 1x1x2(output)  
 ![image](https://github.com/Menglinucas/Floorplan-recognition/blob/master/RECG_CNN_structure.jpg)
+<div align = left><img width=0.5 height=0.5 src=https://github.com/Menglinucas/Floorplan-recognition/blob/master/RECG_CNN_structure.jpg></div>
 ### Train:  
 > #### RECG_CNN.py train  
 ### Predict
