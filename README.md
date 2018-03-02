@@ -8,7 +8,7 @@ Floorplan-recognition
 > #### (3) 16x16x64 ---> flatten + conv  
 > #### (4) 1x1x800 ---> conv
 > #### (5) 1x1x2(output)  
-<div align = left><img width='500' height='100' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/RECG_CNN_structure.jpg'></div>  
+<div align = left><img width='800' height='200' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/RECG_CNN_structure.jpg'></div>  
 
 ### Train:  
 > #### RECG_CNN.py train  
