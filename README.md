@@ -22,6 +22,8 @@ Floorplan-recognition
 > #### (3) 16x16x64 ---> transpose, stride = 2  
 > #### (4-2) 32x32x32 ---> transpose, stride = 2  
 > #### (5-1) 64x64x3(output)
+<div align = left><img width='700' height='160' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/CUTOUT_FCN_structure.jpg'></div>  
+
 ### Train:  
 > #### CUTOUT_FCN.py  
 ### Predict:  
