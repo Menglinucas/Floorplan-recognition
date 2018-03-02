@@ -7,7 +7,8 @@ Floorplan-recognition
 > #### (2) 32x32x32 ---> conv + pool  
 > #### (3) 16x16x64 ---> flatten + conv  
 > #### (4) 1x1x800 ---> conv
-> #### (5) 1x1x2(output)
+> #### (5) 1x1x2(output)  
+![image](https://github.com/Menglinucas/Floorplan-recognition/blob/master/RECG_CNN_structure.jpg)
 ### Train:  
 > #### RECG_CNN.py train  
 ### Predict
