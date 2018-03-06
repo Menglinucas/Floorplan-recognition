@@ -121,7 +121,8 @@ valid_images = glob.glob('cutout_valid_data/images/*')
 valid_annotations = glob.glob('cutout_valid_data/annotations/*')
 # prepare for minibatch
 def next_batch(img_names,ann_names,batch_size):
-	indexs = [random.randint(0,len(img_names)-1) for _ in range(batch_size)]
+	# indexs = [random.randint(0,len(img_names)-1) for _ in range(batch_size)]
+	indexs = random.sample(range(0,len(img_names)-1),batch_size)
 	images = []
 	annots = []
 	for index in indexs:
