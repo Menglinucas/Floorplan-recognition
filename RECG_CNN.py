@@ -33,10 +33,12 @@ def pre_data():
 
 # stract batches
 def next_batch(files_sel,batch_size):
-	batch_files = [files_sel[random.randint(0,len(files_sel)-1)] for _ in range(batch_size)]
+	# batch_files = [files_sel[random.randint(0,len(files_sel)-1)] for _ in range(batch_size)]
+	indexs = random.sample(range(0,len(files_sel)-1),batch_size)
 	images = []
 	labels = []
 	for fl in batch_files:
+		fl = files_sel[index]
 		if num_channels == 1:
 			image = cv2.imread(fl,flags=0)
 		else:
