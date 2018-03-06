@@ -32,6 +32,6 @@ Floorplan-recognition
 > #### pred = sess.run(annotation_pred,feed_dict)  
 > #### pred = np.squeeze(pred,axis=3)  
 
-## Others:  
+## 3. Others  
 ### Structure of RECG_CNN(2) and CUTOUT_FCN(2):  
 <div align = left><img width='700' height='420' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/CNN+FCN.jpg'></div>
