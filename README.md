@@ -35,6 +35,7 @@ Floorplan-recognition
 ## 3. Others  
 ### Structure of 8layers:  
 <div align = left><img width='700' height='420' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/CNN+FCN.jpg'></div>  
+
 ### Train:  
 > #### CUTOUT_FCN.py train  
 ### Predict:  
