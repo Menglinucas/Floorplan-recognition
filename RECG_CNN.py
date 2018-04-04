@@ -1,22 +1,24 @@
+import os
 import sys
 import tensorflow as tf
 import numpy as np
 import cv2
 import glob
 import random
+import pdb
 
 # basic parameters
-layers = 5
+layers = 8
 stride = 1
 pool = 2
 learning_rate = 1.0e-4
-epochs = 500
-train_batch_size = 50
-img_hsize = 64
-img_wsize = 64
+epochs = 2000
+train_batch_size = 20
+img_hsize = 128 
+img_wsize = 128
 num_channels = 3
 num_classes = 2
-train_rate = 0.9
+train_rate = 0.999
 
 # sample data preprocess
 def pre_data():
@@ -37,7 +39,7 @@ def next_batch(files_sel,batch_size):
 	indexs = random.sample(range(0,len(files_sel)-1),batch_size)
 	images = []
 	labels = []
-	for fl in batch_files:
+	for index in indexs:
 		fl = files_sel[index]
 		if num_channels == 1:
 			image = cv2.imread(fl,flags=0)
@@ -67,10 +69,16 @@ features2 = 32
 
 features3 = 64
 
+features4 = 128
+
+features5 = 256
+
+features6 = 512
+
 features_fc1 = 800
 
 features_fc2 = num_classes
-y_ = tf.placeholder(tf.float32,[None,features_fc2])
+y_ = tf.placeholder(tf.float32,[None,num_classes])
 
 # linkers
 def weight_init(shape):	#weight initialization function, wight number ~ nodes
@@ -88,7 +96,19 @@ filter2 = 5
 W_conv2 = weight_init([filter2,filter2,features2,features3])
 b_conv2 = bias_init([features3])
 
-W_fc1 = weight_init([img_hsize//pow(pool,(layers-3))*img_wsize//pow(pool,(layers-3))*features3,features_fc1])
+filter3 = 3
+W_conv3 = weight_init([filter3,filter3,features3,features4])
+b_conv3 = bias_init([features4])
+
+filter4 = 3
+W_conv4 = weight_init([filter4,filter4,features4,features5])
+b_conv4 = bias_init([features5])
+
+filter5 = 3
+W_conv5 = weight_init([filter5,filter5,features5,features6])
+b_conv5 = bias_init([features6])
+
+W_fc1 = weight_init([img_hsize//pow(pool,(layers-3))*img_wsize//pow(pool,(layers-3))*features6,features_fc1])
 b_fc1 = bias_init([features_fc1])
 
 W_fc2 = weight_init([features_fc1, features_fc2])
@@ -106,8 +126,17 @@ h_pool1 = max_pool_2x2(h_conv1,pool)
 h_conv2 = tf.nn.relu(conv2d(h_pool1,W_conv2,stride)+b_conv2)
 h_pool2 = max_pool_2x2(h_conv2,pool)
 
-h_pool2_flat = tf.reshape(h_pool2,[-1,img_hsize//pow(pool,(layers-3))*img_wsize//pow(pool,(layers-3))*features3])
-h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat,W_fc1))+b_fc1
+h_conv3 = tf.nn.relu(conv2d(h_pool2,W_conv3,stride)+b_conv3)
+h_pool3 = max_pool_2x2(h_conv3,pool)
+
+h_conv4 = tf.nn.relu(conv2d(h_pool3,W_conv4,stride)+b_conv4)
+h_pool4 = max_pool_2x2(h_conv4,pool)
+
+h_conv5 = tf.nn.relu(conv2d(h_pool4,W_conv5,stride)+b_conv5)
+h_pool5 = max_pool_2x2(h_conv5,pool)
+
+h_pool5_flat = tf.reshape(h_pool5,[-1,img_hsize//pow(pool,(layers-3))*img_wsize//pow(pool,(layers-3))*features6])
+h_fc1 = tf.nn.relu(tf.matmul(h_pool5_flat,W_fc1)+b_fc1)
 keep_prob = tf.placeholder(tf.float32)
 h_fc1_drop = tf.nn.dropout(h_fc1,keep_prob)
 
@@ -133,10 +162,10 @@ with tf.Session() as sess:
 		for i in range(epochs):
 			batch = next_batch(files_train,train_batch_size)
 			sess.run(train_step,feed_dict={x:batch[0],y_:batch[1],keep_prob:1.0})
-			if i%100 == 0:
-				train_accuracy = accuracy.eval(feed_dict = {x:batch[0],y_:batch[1],keep_prob:0.8})
-				print('step %d, training accuracy %g'%(i,train_accuracy))
-				saver.save(sess,'RECG_model/recg.cpk',global_step=i)
+			train_accuracy = accuracy.eval(feed_dict = {x:batch[0],y_:batch[1],keep_prob:0.8})
+			print('step %d, training accuracy %g'%(i+1,train_accuracy))
+			if (i+1)%500 == 0:
+				saver.save(sess,'RECG_model/recg.cpk',global_step=i+1)
 		#validation
 		batch = next_batch(files_train,len(files_valid))
 		valid_accuracy = accuracy.eval(feed_dict = {x:batch[0],y_:batch[1],keep_prob:1.0})
