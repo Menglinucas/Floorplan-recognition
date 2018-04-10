@@ -6,6 +6,7 @@ import cv2
 import glob
 import random
 import pdb
+import time
 
 # basic parameters
 layers = 8
@@ -56,15 +57,15 @@ filter2 = 5
 W_conv2 = weight_init([filter2,filter2,features2,features3])
 b_conv2 = bias_init([features3])
 
-filter3 = 3
+filter3 = 5
 W_conv3 = weight_init([filter3,filter3,features3,features4])
 b_conv3 = bias_init([features4])
 
-filter4 = 3
+filter4 = 5
 W_conv4 = weight_init([filter4,filter4,features4,features5])
 b_conv4 = bias_init([features5])
 
-filter5 = 3
+filter5 = 5
 W_conv5 = weight_init([filter5,filter5,features5,features6])
 b_conv5 = bias_init([features6])
 
@@ -161,12 +162,12 @@ def next_batch(img_names,ann_names,batch_size):
 	for index in indexs:
 		image = cv2.imread(img_names[index],flags=1)
 		annot = cv2.imread(ann_names[index],flags=0)
-		image = cv2.resize(image,(img_wsize,img_hsize),0,0,cv2.INTER_LINEAR)
+		image = cv2.resize(image,(img_wsize,img_hsize),0,0,cv2.INTER_AREA)
 		image = image.astype(np.float32)
 		image = np.multiply(image,1.0/255.0)
 		images.append(image)
-		annot = cv2.resize(annot,(img_wsize,img_hsize),0,0,cv2.INTER_LINEAR)
-		annot = annot.reshape((img_wsize,img_hsize,1))
+		annot = cv2.resize(annot,(img_wsize,img_hsize),0,0,cv2.INTER_AREA)
+		annot = annot.reshape((img_hsize,img_wsize,1))
 		annot = annot.astype(np.float32)
 		annot = np.multiply(annot,1.0/255.0)
 		annots.append(annot)
@@ -196,17 +197,64 @@ with tf.Session() as sess:
 					img_save = pred[j]*255
 					cv2.imwrite(os.path.join('CUTOUT_model/img/',str(j)+'.jpg'),img_save)
 	elif sys.argv[1] == 'predict':
-		test = cv2.imread("test/test.jpg",flags=1)
-		test = cv2.resize(test,(img_wsize,img_hsize),0,0,cv2.INTER_LINEAR)
+		# testing image
+		test0 = cv2.imread("test/test.jpg",flags=1)
+		# resize to (128,128)
+		test = cv2.resize(test0,(img_wsize,img_hsize),0,0,cv2.INTER_AREA)
 		test = test.astype(np.float32)
 		test = np.multiply(test,1.0/255.0)
+		# convert to the shape for tensorflow placeholder
 		test = test.reshape((1,test.shape[0],test.shape[1],test.shape[2]))
+		# predicting
 		saver.restore(sess,tf.train.latest_checkpoint('CUTOUT_model/'))
 		pred = sess.run(annotation_pred,feed_dict={x:test,keep_prob:1.0})
-		pred = np.squeeze(pred,axis=3)
-		img_save = pred[0] * 255
-		# cv2.imshow('image',valid_batch[0][0])
-		# cv2.waitKey(0)
-		cv2.imwrite("test/image.jpg",test[0]*255)
-		cv2.imwrite("test/annot.jpg",img_save)
-		
+		# recover the shape for displaying image
+		test = np.squeeze(test,axis=0) * 255
+		pred = np.squeeze(pred,axis=0) * 255
+		pred = pred.astype(np.float32)
+		# recover predication to the original size
+		pred =  cv2.resize(pred,(test0.shape[1],test0.shape[0]),0,0,cv2.INTER_CUBIC)
+		pred = pred.reshape((pred.shape[0],pred.shape[1],1))
+
+		# extract the ROI and save, test0 is the result
+		for i in range(pred.shape[0]):
+			for j in range(pred.shape[1]):
+				if pred[i,j] == 0:
+					test0[i,j] = (255,255,255)
+		cv2.imwrite("test/annot.jpg",test0)
+	# elif sys.argv[1] == 'predict2':
+	# 	# source image
+	# 	test = cv2.imread("test/test.jpg",flags=1)
+	# 	test = cv2.resize(test,(img_wsize,img_hsize),0,0,cv2.INTER_LINEAR)
+	# 	test = test.astype(np.float32)
+	# 	test = np.multiply(test,1.0/255.0)
+	# 	test = test.reshape((1,test.shape[0],test.shape[1],test.shape[2]))
+
+	# 	# label
+	# 	test_annot = cv2.imread("test/test_annot.jpg",flags=0)
+	# 	test_annot = cv2.resize(test_annot,(img_wsize,img_hsize),0,0,cv2.INTER_LINEAR)
+	# 	test_annot = test_annot.reshape((img_wsize,img_hsize,1))
+	# 	test_annot = test_annot.astype(np.float32)
+	# 	test_annot = np.multiply(test_annot,1.0/255.0)
+	# 	test_annot = test_annot.reshape((1,test_annot.shape[0],test_annot.shape[1],test_annot.shape[2]))
+
+	# 	saver.restore(sess,tf.train.latest_checkpoint('CUTOUT_model/'))
+	# 	pred = sess.run(annotation_pred,feed_dict={x:test,keep_prob:1.0})
+
+	# 	predict_loss2 = sess.run(loss,feed_dict={x:test,y_:pred,keep_prob:1.0})
+	# 	predict_loss = sess.run(loss,feed_dict={x:test,y_:test_annot,keep_prob:1.0})
+	# 	print(predict_loss)
+	# 	print(predict_loss2)
+
+	# 	pred = np.squeeze(pred,axis=0)
+	# 	pred = pred * 255
+	# 	test = np.squeeze(test,axis=0) * 255
+
+	# 	result = pred*test/255
+	# 	for i in range(img_hsize):
+	# 		for j in range(img_wsize):
+	# 			if all(result[i,j]) == 0:
+	# 				result[i,j] = (255,255,255)
+
+	# 	cv2.imwrite("test/image.jpg",test)
+	# 	cv2.imwrite("test/annot.jpg",result)

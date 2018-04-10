@@ -12,7 +12,7 @@ layers = 8
 stride = 1
 pool = 2
 learning_rate = 1.0e-4
-epochs = 2000
+epochs = 3000
 train_batch_size = 20
 img_hsize = 128 
 img_wsize = 128
@@ -45,7 +45,7 @@ def next_batch(files_sel,batch_size):
 			image = cv2.imread(fl,flags=0)
 		else:
 			image = cv2.imread(fl,flags=1)
-		image = cv2.resize(image,(img_wsize,img_hsize),0,0,cv2.INTER_LINEAR)
+		image = cv2.resize(image,(img_wsize,img_hsize),0,0,cv2.INTER_AREA)
 		image = image.astype(np.float32)
 		image = np.multiply(image,1.0/255.0)
 		images.append(image)
@@ -96,15 +96,15 @@ filter2 = 5
 W_conv2 = weight_init([filter2,filter2,features2,features3])
 b_conv2 = bias_init([features3])
 
-filter3 = 3
+filter3 = 5
 W_conv3 = weight_init([filter3,filter3,features3,features4])
 b_conv3 = bias_init([features4])
 
-filter4 = 3
+filter4 = 5
 W_conv4 = weight_init([filter4,filter4,features4,features5])
 b_conv4 = bias_init([features5])
 
-filter5 = 3
+filter5 = 5
 W_conv5 = weight_init([filter5,filter5,features5,features6])
 b_conv5 = bias_init([features6])
 
@@ -164,7 +164,7 @@ with tf.Session() as sess:
 			sess.run(train_step,feed_dict={x:batch[0],y_:batch[1],keep_prob:1.0})
 			train_accuracy = accuracy.eval(feed_dict = {x:batch[0],y_:batch[1],keep_prob:0.8})
 			print('step %d, training accuracy %g'%(i+1,train_accuracy))
-			if (i+1)%500 == 0:
+			if (i+1)%100 == 0:
 				saver.save(sess,'RECG_model/recg.cpk',global_step=i+1)
 		#validation
 		batch = next_batch(files_train,len(files_valid))
@@ -184,7 +184,7 @@ with tf.Session() as sess:
 					image = cv2.imread(fl,flags=0)
 				else:
 					image = cv2.imread(fl,flags=1)
-				image = cv2.resize(image,(img_wsize,img_hsize),0,0,cv2.INTER_LINEAR)
+				image = cv2.resize(image,(img_wsize,img_hsize),0,0,cv2.INTER_AREA)
 				image = image.astype(np.float32)
 				image = np.multiply(image,1.0/255.0)
 				images.append(image)
@@ -192,4 +192,23 @@ with tf.Session() as sess:
 		result = sess.run(y_conv, feed_dict={x:images,keep_prob:1.0})
 		result = 1-np.argmax(result,axis=1)
 		for i in range(len(files)):
-			print(files[i],'\t',result[i])
+			print(files[i],'\t',result[i,])
+	else:
+		saver.restore(sess, tf.train.latest_checkpoint('RECG_model/'))
+		fl = sys.argv[1]
+		image = cv2.imread(fl,flags=0)
+		if isinstance(image,np.ndarray) == False:
+			print("Maybe not an image!")
+		else:
+			if num_channels == 1:
+				image = cv2.imread(fl,flags=0)
+			else:
+				image = cv2.imread(fl,flags=1)
+			image = cv2.resize(image,(img_wsize,img_hsize),0,0,cv2.INTER_AREA)
+			image = image.astype(np.float32)
+			image = np.multiply(image,1.0/255.0)
+			image = image.reshape((1,image.shape[0],image.shape[1],image.shape[2]))
+			result = sess.run(y_conv, feed_dict={x:image,keep_prob:1.0})
+			result = 1-np.argmax(result,axis=1)
+			result = result[0,]
+			print(fl,'\t',result)
