@@ -34,9 +34,18 @@ Floorplan-recognition
 
 ## 3. Others  
 ### Structure of 8layers:  
-<div align = left><img width='700' height='420' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/CNN+FCN.jpg'></div>  
+<div align = left><img width='700' height='420' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/CNN+FCN.jpg'></div> 
+<div align = left><img width='700' height='420' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/CNN_8layers.jpg.jpg'></div>
+<div align = left><img width='700' height='420' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/FCN_VGG.jpg'></div>
+<div align = left><img width='700' height='420' src='https://github.com/Menglinucas/Floorplan-recognition/blob/master/FCN_segnet.jpg'></div>
 
 ### Train:  
-> #### CUTOUT_FCN.py train  
+> #### RECG_CNN.py train    
+> #### CUTOUT_FCN.py train, need the 8layer model from RECG_CNN2.py.  
+或  
+> #### CUTOUT_segnet.py train
 ### Predict:  
-> #### CUTOUT_FCN.py predict  
+> #### RECG_CNN.py predict    
+> #### CUTOUT_FCN.py predict  
+或  
+> #### CUTOUT_segnet.py predict
