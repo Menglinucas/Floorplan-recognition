@@ -14,7 +14,7 @@ stride = 1
 pool = 2
 learning_rate = 1.0e-4
 epochs = 1000000
-train_batch_size = 5
+train_batch_size = 2
 img_hsize = 128 
 img_wsize = 128
 num_channels = 3
@@ -104,33 +104,33 @@ h_fc1_drop = tf.nn.dropout(h_fc1,keep_prob)
 y_conv = tf.nn.softmax(tf.matmul(h_fc1_drop,W_fc2)+b_fc2)
 
 # get weight data
-saver = tf.train.Saver()
-with tf.Session() as sess1:
-	saver.restore(sess1, tf.train.latest_checkpoint('RECG_model3/'))
-	W1_data = sess1.run(W_conv1)
-	b1_data = sess1.run(b_conv1)
-	W2_data = sess1.run(W_conv2)
-	b2_data = sess1.run(b_conv2)
-	W3_data = sess1.run(W_conv3)
-	b3_data = sess1.run(b_conv3)
-hconv1_data = tf.nn.relu(conv2d(x,W1_data,stride)+b1_data)
-hpool1_data = max_pool_2x2(hconv1_data,pool)
-hconv2_data = tf.nn.relu(conv2d(hpool1_data,W2_data,stride)+b2_data)
-hpool2_data = max_pool_2x2(hconv2_data,pool)
-hconv3_data = tf.nn.relu(conv2d(hpool2_data,W3_data,stride)+b3_data)
-hpool3_data = max_pool_2x2(hconv3_data,pool)
+# saver = tf.train.Saver()
+# with tf.Session() as sess1:
+# 	saver.restore(sess1, tf.train.latest_checkpoint('RECG_model/'))
+# 	W1_data = sess1.run(W_conv1)
+# 	b1_data = sess1.run(b_conv1)
+# 	W2_data = sess1.run(W_conv2)
+# 	b2_data = sess1.run(b_conv2)
+# 	W3_data = sess1.run(W_conv3)
+# 	b3_data = sess1.run(b_conv3)
+# hconv1_data = tf.nn.relu(conv2d(x,W1_data,stride)+b1_data)
+# hpool1_data = max_pool_2x2(hconv1_data,pool)
+# hconv2_data = tf.nn.relu(conv2d(hpool1_data,W2_data,stride)+b2_data)
+# hpool2_data = max_pool_2x2(hconv2_data,pool)
+# hconv3_data = tf.nn.relu(conv2d(hpool2_data,W3_data,stride)+b3_data)
+# hpool3_data = max_pool_2x2(hconv3_data,pool)
 
 # pool5 to t_pool3 layer
 W_t3 = weight_init([filter5,filter5,features4,features6])
 b_t3 = bias_init([features4])
 conv_t3 = tf.nn.conv2d_transpose(h_pool5,W_t3,tf.shape(h_pool3),strides=[1,4,4,1],padding='SAME')+b_t3
-fuse_3 = tf.add(conv_t3,hpool3_data)
+fuse_3 = tf.add(conv_t3,h_pool3)
 
 # pool3 to t_pool1 layer
 W_t1 = weight_init([filter3,filter3,features2,features4])
 b_t1 = bias_init([features2])
 conv_t1 = tf.nn.conv2d_transpose(fuse_3,W_t1,tf.shape(h_pool1),strides=[1,4,4,1],padding='SAME')+b_t1
-fuse_1 = tf.add(conv_t1,hpool1_data)
+fuse_1 = tf.add(conv_t1,h_pool1)
 
 # pool1 to t_original image layer
 W_t0 = weight_init([filter1,filter1,num_classes,features2])
