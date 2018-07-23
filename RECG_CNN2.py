@@ -175,7 +175,7 @@ with tf.Session() as sess:
 			if (i+1)%100 == 0:
 				saver.save(sess,'RECG_model3/recg.cpk',global_step=i+1)
 		#validation
-		batch = next_batch(files_train,len(files_valid))
+		batch = next_batch(files_valid,len(files_valid))
 		valid_accuracy = accuracy.eval(feed_dict = {x:batch[0],y_:batch[1],keep_prob:1.0})
 		print ('valid accuracy %g'%valid_accuracy)
 	elif sys.argv[1] == 'predict':

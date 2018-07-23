@@ -1,7 +1,7 @@
 # predict module
 # import predictFCN
 # sess = predictFCN.restoreModel(modelPath="CUTOUT_model")
-# predictFCN.predict(sess, fileName="test/test.jpg")
+# predictFCN.predict(sess, fileName="test/test1.jpg")
 
 # if session exist, delete it
 # for key in globals().keys():
@@ -127,8 +127,8 @@ annotation_pred = tf.expand_dims(tf.argmax(conv_t0,axis=3), dim=3)
 
 # post processing
 def postProcess(img):
-	# open operation
-	element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3));
+	# close operation
+	element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 	img = cv2.morphologyEx(img,cv2.MORPH_CLOSE,element,iterations=3)
 	# outline operation
 	img = img.astype(np.uint8)
@@ -142,7 +142,8 @@ def postProcess(img):
 			myIndex = index
 	img = np.zeros(img.shape,np.uint8)
 	img = cv2.drawContours(img,contours,myIndex,255,-1)
-	element = cv2.getStructuringElement(cv2.MORPH_RECT, (10, 10));
+	# open operation
+	element = cv2.getStructuringElement(cv2.MORPH_RECT, (6, 6))
 	img = cv2.morphologyEx(img,cv2.MORPH_OPEN,element,iterations=3)
 	return img
 
@@ -229,6 +230,17 @@ def predict(sess,fileName):
 	print("square level: %d" % imgRatio)
 	print("corner position: %s" % cornerPosition)
 	print("corner level: %d" % cornerLevel)
+	# if exist label, calculate the accuracy of square level
+	img1 = cv2.imread("test/annotations/annot-"+fileName.split('/')[1],flags=0)
+	if isinstance(img1,np.ndarray) == True:
+		# open operation
+		element = cv2.getStructuringElement(cv2.MORPH_RECT, (6, 6))
+		img1 = cv2.morphologyEx(img1,cv2.MORPH_CLOSE,element,iterations=3)
+		imgRatio1, cornerPosition1, cornerLevel1 = squareCorner(img1)
+		accuracy = 100-round(abs(imgRatio-imgRatio1)/imgRatio1*100)
+		print("label square level: %d" % imgRatio1)
+		print("the predicting accuracy is: %d" % accuracy)
+
 	return imgRatio, cornerPosition, cornerLevel
 
 def main():

@@ -14,12 +14,12 @@ stride = 1
 pool = 2
 learning_rate = 1.0e-4
 epochs = 1000000
-train_batch_size = 2
+train_batch_size = 3
 img_hsize = 128 
 img_wsize = 128
 num_channels = 3
 num_classes = 2
-train_rate = 0.999
+train_rate = 1
 
 # construct networks
 # layers
@@ -175,6 +175,27 @@ def next_batch(img_names,ann_names,batch_size):
 	annots = np.array(annots)
 	return images, annots
 
+# post processing
+def postProcess(img):
+	# open operation
+	element = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2));
+	img = cv2.morphologyEx(img,cv2.MORPH_OPEN,element,iterations=3)
+	# outline operation
+	img = img.astype(np.uint8)
+	# img.convertTo(img,CV_8U)
+	img, contours, hierarchy = cv2.findContours(img,cv2.RETR_CCOMP,cv2.CHAIN_APPROX_NONE)
+	maxArea = 0
+	for index,contour in enumerate(contours):
+		area = cv2.contourArea(contours[index],oriented=False)
+		if area > maxArea:
+			maxArea = area
+			myIndex = index
+	img = np.zeros(img.shape,np.uint8)
+	img = cv2.drawContours(img,contours,myIndex,255,-1)
+	element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3));
+	img = cv2.morphologyEx(img,cv2.MORPH_CLOSE,element,iterations=3)
+	return img
+
 # training
 init = tf.global_variables_initializer()
 saver = tf.train.Saver()
@@ -214,16 +235,24 @@ with tf.Session() as sess:
 			test = np.squeeze(test,axis=0) * 255
 			pred = np.squeeze(pred,axis=0) * 255
 			pred = pred.astype(np.float32)
+			# cv2.imshow('pred',pred)
+			# cv2.waitKey(0)
+			#post process
+			pred = postProcess(pred)
 			# recover predication to the original size
-			pred =  cv2.resize(pred,(test0.shape[1],test0.shape[0]),0,0,cv2.INTER_CUBIC)
+			pred = cv2.resize(pred,(test0.shape[1],test0.shape[0]),0,0,cv2.INTER_CUBIC)
 			pred = pred.reshape((pred.shape[0],pred.shape[1],1))
+			# to be binary
+			_, pred = cv2.threshold(pred,0,255,cv2.THRESH_BINARY)
+			cv2.imwrite("test/annot"+str(k)+".jpg",pred)
 
-			# extract the ROI and save, test0 is the result
-			for i in range(pred.shape[0]):
-				for j in range(pred.shape[1]):
-					if pred[i,j] == 0:
-						test0[i,j] = (255,255,255)
-			cv2.imwrite("test/annot"+str(k)+".jpg",test0)
+			# # extract the ROI and save, test0 is the result
+			# for i in range(pred.shape[0]):
+			# 	for j in range(pred.shape[1]):
+			# 		if pred[i,j] == 0:
+			# 			test0[i,j] = (255,255,255)
+			# cv2.imwrite("test/annot"+str(k)+".jpg",test0)
+
 	# elif sys.argv[1] == 'predict2':
 	# 	# source image
 	# 	test = cv2.imread("test/test.jpg",flags=1)
