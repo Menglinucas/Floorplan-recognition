@@ -14,7 +14,7 @@
 # 	test:        python RECG_CNN2_InOutDoor_refine2.py test
 # 	testFile:    python RECG_CNN2_InOutDoor_refine2.py testFile modelPath
 # *********************************************************************************
-# Note the paths of training data, storing model, test data and the test result !
+# Note the paths of training data, storing model, test data and the test result ! *
 # *********************************************************************************
 import os, sys, glob, shutil, time
 import cv2, random, numpy as np
@@ -151,7 +151,7 @@ def createGraph():
 			h_pool5 = max_pool_2x2(h_conv5,pool)
 		with tf.name_scope("flattenLayer"):
 			h_pool5_flat = tf.reshape(h_pool5,[-1,img_hsize//pow(pool,(layers-3))*img_wsize//pow(pool,(layers-3))*features6])
-		with tf.name_scope("classfyLayer"):
+		with tf.name_scope("classifyLayer"):
 			h_fc1 = tf.nn.relu(tf.matmul(h_pool5_flat,W_fc1)+b_fc1)
 			h_fc1_drop = tf.nn.dropout(h_fc1,keep_prob)
 		# y-predict
@@ -197,7 +197,7 @@ def train(continueTrain=False, startEpoch=1, nEpoch=epochs):
 		init = tf.global_variables_initializer()
 		sess.run(init)
 		# create a tensorboard writer
-		writer = tf.summary.FileWriter("RECG_model3_InOutDoor/logs",sess.graph)
+		writer = tf.summary.FileWriter(os.path.join(modelPath,"logs"),sess.graph)
 		# create a saver to save variables in training
 		saver = tf.train.Saver(tf.global_variables(),max_to_keep=5)
 		# continueTrain?
@@ -248,7 +248,7 @@ def test(modelPath="RECG_model3_InOutDoor"):
 	if not os.path.exists(testPath): os.mkdir(testPath)
 	if not os.path.exists(resultPath): os.mkdir(resultPath)
 	# path of each class
-	resultDirs = ["/floorPlan","/inDoor","/outDoor","/else"]
+	resultDirs = ["floorPlan","inDoor","outDoor","else"]
 	resultDirs = [os.path.join(resultPath,rpi) for rpi in resultDirs]
 	# make dir?
 	for resultDir in resultDirs:
@@ -301,7 +301,7 @@ def test(modelPath="RECG_model3_InOutDoor"):
 		print(tEnd-tStart)
 		print(len(files)/(tEnd-tStart))
 
-def testFile(fl,modelPath):
+def testFile(fl,modelPath="RECG_model3_InOutDoor"):
 	# launch a graph
 	g = createGraph()
 	####################
