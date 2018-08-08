@@ -199,7 +199,7 @@ def train(continueTrain=False, startEpoch=1, nEpoch=epochs):
 		# create a tensorboard writer
 		writer = tf.summary.FileWriter(os.path.join(modelPath,"logs"),sess.graph)
 		# create a saver to save variables in training
-		saver = tf.train.Saver(tf.global_variables(),max_to_keep=5)
+		saver = tf.train.Saver(tf.global_variables(),max_to_keep=1)
 		# continueTrain?
 		if continueTrain:
 			# load the model

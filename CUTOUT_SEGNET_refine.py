@@ -247,7 +247,7 @@ def train(continueTrain=False, startEpoch=1, nEpoch=epochs):
 		# create a tensorboard writer
 		writer = tf.summary.FileWriter(os.path.join(modelPath,"logs"),sess.graph)
 		# create a saver to save variables in training
-		saver = tf.train.Saver(tf.global_variables(),max_to_keep=5)
+		saver = tf.train.Saver(tf.global_variables(),max_to_keep=1)
 		# continueTrain?
 		if continueTrain:
 			# load the model
@@ -380,9 +380,10 @@ def predict(sess,x,y_predict,keep_prob,fileName):
 	except ValueError:
 		print("some value error!")
 		return
-	print("square level: %.1f" % imgRatio)
+	print("square level: %.4f" % imgRatio)
 	print("corner position: %s" % cornerPosition)
 	print("corner level: %.1f" % cornerLevel)
+	print("shape:", img0.shape)
 	# if exist label, calculate the accuracy of square level
 	img1 = cv2.imread("test/annotations/annot-"+fileName.split('/')[1],flags=0)
 	if isinstance(img1,np.ndarray) == True:
@@ -430,7 +431,7 @@ def squareLevel(sess,x,y_predict,keep_prob,imageByte):
 	imgBoxArea = imgBoxPoints[2] * imgBoxPoints[3]
 	# imgArea / imgBoxArea
 	imgRatio = imgArea/(imgBoxArea+1e-5)*100
-	return imgRatio
+	return round(imgRatio,4)
 
 def squareLevel2(sess,x,y_predict,keep_prob,img0):
 	# img0 = cv2.imdecode(np.fromstring(imageByte,np.uint8),flags=1)
@@ -464,7 +465,7 @@ def squareLevel2(sess,x,y_predict,keep_prob,img0):
 	imgBoxArea = imgBoxPoints[2] * imgBoxPoints[3]
 	# imgArea / imgBoxArea
 	imgRatio = imgArea/(imgBoxArea+1e-5)*100
-	return imgRatio
+	return round(imgRatio,4),img0.shape
 
 def main():
 	if len(sys.argv) == 1:
