@@ -1,4 +1,5 @@
 '''
+Using pHash + resizeHash
 Checking duplicates of inDoor, outDoor and floorplan pictures.
 Retain the best one, and delete the duplicates.
 Usage:
@@ -34,11 +35,11 @@ def getHash(img0):
 	height = img0.shape[0]
 	width = img0.shape[1]
 	# height/width
-	hw = round(min(width,height)/max(width,height)*10000)
-	# resize to 64 x 64
-	img = cv2.resize(img0,(64,64))
+	hw = round(min(width,height)/max(width,height)*9999)
 	# convert to gray image
-	img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+	img = cv2.cvtColor(img0,cv2.COLOR_BGR2GRAY)
+	# resize to 64 x 64
+	img = cv2.resize(img,(64,64))
 	# dct conversion
 	dct = cv2.dct(np.float32(img))
 	# extract roi
@@ -125,7 +126,7 @@ def processDynamic(hashList0,imageByte):
 		res = 'add'
 	else:
 		index = hashList.index(imgHash[:37])
-		if int(imgHash[38:]) < int(hashList0[index][38:]):  # drop
+		if int(imgHash[38:]) <= int(hashList0[index][38:]):  # drop
 			res = 'drop'
 		else:  # replace
 			res = ('rep',index)
@@ -149,7 +150,7 @@ def hammingDistance(hexHash1,hexHash2):
 ######################################################################
 
 # test duplicates of some files
-def testGetDupl(path="E:/FP-python/test/replicate/*"):
+def testGetDupl(path="test/replicate/*"):
 	import glob
 	import os
 	imageNames0 = glob.glob(path)
@@ -159,42 +160,87 @@ def testGetDupl(path="E:/FP-python/test/replicate/*"):
 		img = cv2.imread(imageName,flags=1)
 		if isinstance(img,np.ndarray) == False:
 			continue
-		hash = getHash(img)
+		hash = getHash(img)[:32]
 		hashes.append(hash)
 		imageNames.append(imageName)
 	dictHashes = duplDict(hashes)
-	# for key in dictHashes.keys():
-		# print(key,':',[os.path.split(imageNames[i])[1] for i in dictHashes[key]])
+	# with open('checking.txt','w') as f:
+		# for key in dictHashes.keys():
+			# f.write(str(dictHashes[key])+'\n')
 	return imageNames,dictHashes,hashes
 	
 # test for static, delete duplicates in data base
-def testDelDupl():
-	imageList,_,hashList0 = testGetDupl()
-	return delDupl(imageList,hashList0)
+def testDelDupl(path="test/replicate/*"):
+	import time
+	tStart = time.time()
+	imageList,_,hashList0 = testGetDupl(path)
+	tEnd = time.time()
+	print("哈希值计算效率：",len(imageList)/(tEnd-tStart))
+	tStart = time.time()
+	res = delDupl(imageList,hashList0)
+	tEnd = time.time()
+	print("静态查、去重效率：",len(imageList)/(tEnd-tStart))
+	return
 	
 # test for dynamical process	
-def testProcessDynamic(fileName):
-	_,_,hashList0 = testDupl()
+def testProcessDynamic(fileName,path="test/replicate/*"):
+	_,_,hashList0 = testGetDupl(path)
 	with open(fileName,'rb') as f:
 		imageByte = f.read()
-	res = process(hashList0,imageByte)
+	res = processDynamic(hashList0,imageByte)
 	return res
+def testDynamicEff(path="test/replicate/*"):
+	import time
+	imageNames,_,hashList0 = testGetDupl(path)
+	tStart = time.time()
+	for fileName in imageNames:
+		with open(fileName,'rb') as f:
+			imageByte = f.read()
+		res = processDynamic(hashList0,imageByte)
+	tEnd = time.time()
+	print("动态查、去重效率：",len(imageNames)/(tEnd-tStart))
+	return
+	
+# test summary
+def testSummary(path="recg_train_data3_InOutDoor_refine/floorplan/*"):
+	testDelDupl(path)
+	testDynamicEff(path)
 	
 # x--paths; y--replicate dictionaries
-def showRel(x,y):
+def showDupl(x,y):
+	n = 0
 	for key in y.keys():
 		for i in y[key]:
 			cv2.imshow('a'+str(i),cv2.imread(x[i],flags=1))
 			if y[key].index(i)==0:
 				cv2.moveWindow('a'+str(i),100,100);
 			elif y[key].index(i)==1:
-				cv2.moveWindow('a'+str(i),500,100);
+				cv2.moveWindow('a'+str(i),700,100);
 			elif y[key].index(i)==2:
-				cv2.moveWindow('a'+str(i),900,100);
+				cv2.moveWindow('a'+str(i),1300,100);
 			elif y[key].index(i)==3:
 				cv2.moveWindow('a'+str(i),100,500);
-			else:
+			elif y[key].index(i)==4:
 				cv2.moveWindow('a'+str(i),500,500);
-		cv2.waitKey(0)
-		yield 0
-		cv2.destroyAllWindows()
+			else:
+				cv2.moveWindow('a'+str(i),900,500);
+		cv2.waitKey(1200);cv2.destroyAllWindows()
+		n = n+1
+		yield n
+def showDupl2(x,iters):
+	for i in iters:
+		cv2.imshow('a'+str(i),cv2.imread(x[i],flags=1))
+		if iters.index(i)==0:
+			cv2.moveWindow('a'+str(i),100,100);
+		elif iters.index(i)==1:
+			cv2.moveWindow('a'+str(i),500,100);
+		elif iters.index(i)==2:
+			cv2.moveWindow('a'+str(i),900,100);
+		elif iters.index(i)==3:
+			cv2.moveWindow('a'+str(i),100,500);
+		elif iters.index(i)==4:
+			cv2.moveWindow('a'+str(i),500,500);
+		else:
+			cv2.moveWindow('a'+str(i),900,500);
+	cv2.waitKey(0)
+	return	
